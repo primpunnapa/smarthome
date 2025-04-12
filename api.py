@@ -2,7 +2,6 @@ from fastapi import FastAPI,HTTPException,Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pathlib import Path
 from fastapi.responses import HTMLResponse
 from dbutils.pooled_db import PooledDB
 import pymysql
@@ -45,7 +44,9 @@ async def read_index(request: Request):
 @app.get("/outfits", response_class=HTMLResponse)
 async def read_index(request: Request):
     return templates.TemplateResponse("outfits.html", {"request": request})
-
+@app.get("/comparison", response_class=HTMLResponse)
+async def read_index(request: Request):
+    return templates.TemplateResponse("comparison.html", {"request": request})
 @app.get("/{place}/{source}/lastest", response_model=WeatherResponse)
 async def get_weather_data(place, source):
     with pool.connection() as conn:
@@ -184,6 +185,28 @@ def get_outdoor() -> list[OutdoorData]:
             OutdoorData(main=main, description=description, temperature=temperature, humidity=humidity, place=place) for
             main, description, temperature, humidity, place in cs.fetchall()]
     return result
+
+
+
+# @app.get("/{place}/recommend/dressing", response_model=dict)
+# async def get_dressing_recommendation(place: str):
+#     weather_data = await get_weather_data(place, "outdoor")
+#     if "error" in weather_data:
+#         raise HTTPException(status_code=404, detail=weather_data["error"])
+#
+#     return {
+#         "place": place,
+#         "recommendation": get_dressing_suggestion(
+#             temperature=weather_data.temperature,
+#             weather_main=weather_data.weather_main,
+#             description=weather_data.weather_description
+#         ),
+#         "weather_conditions": {
+#             "temperature": weather_data.temperature,
+#             "weather": weather_data.weather_main,
+#             "description": weather_data.weather_description
+#         }
+#     }
 
 
 @app.get("/{place}/recommend/activity", response_model=dict)
