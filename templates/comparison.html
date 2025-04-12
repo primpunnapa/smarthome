@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather Dashboard - Comparison</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/static/main.js" defer></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+      <a href="/">Home</a>
+      <a href="statistics">Statistic</a>
+      <a href="suggestion">Suggestions</a>
+      <a href="outfits">Outfits</a>
+      <a href="comparison">Comparison</a>
+    </nav>
+
+    <h1 class="text-3xl font-bold text-center mb-8">Weather Data - Comparison</h1>
+
+    <!-- Place selector -->
+    <div class="flex justify-center mb-4">
+      <label for="place-selector" class="mr-2 font-medium">Select Location:</label>
+      <select id="place-selector" onchange="fetchSuggestion(this.value)" class="px-4 py-2 rounded border">
+        <option value="KU">KU</option>
+        <option value="ladprao">Ladprao</option>
+      </select>
+    </div>
+
+    <!-- Container -->
+    <main class="container mx-auto p-4 max-w-xl">
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-blue-600 p-6 text-white">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 id="location" class="text-3xl font-bold">KU Weather</h1>
+                        <p class="opacity-90">Current conditions</p>
+                    </div>
+                    <div id="weather-emoji" class="text-5xl">☁️</div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="p-6">
+                <div class="space-y-4">
+                    <!-- Temperature Alert -->
+                    <div class="flex items-start p-4 bg-blue-50 rounded-lg">
+                        <div class="mr-4 text-blue-500 text-2xl">🌡️</div>
+                        <div>
+                            <h3 class="font-semibold text-xl">Temperature Notice</h3>
+                            <p id="temperature" class="text-lg font-medium">Indoor: --°C | Outdoor: --°C</p>
+                            <p id="temp-compare" class="text-sm text-blue-600 mt-1">Loading...</p>
+                        </div>
+                    </div>
+
+                    <!-- Humidity Alert -->
+                    <div class="flex items-start p-4 bg-yellow-50 rounded-lg">
+                        <div class="mr-4 text-yellow-500 text-2xl">💧</div>
+                        <div>
+                            <h3 class="font-semibold text-xl">Humidity Alert</h3>
+                            <p id="humidity" class="text-lg font-medium">Indoor: --% | Outdoor: --%</p>
+                            <p id="humid-compare" class="text-sm text-yellow-600 mt-1">Loading...</p>
+                        </div>
+                    </div>`
+
+                    <!-- Weather Alert -->
+                    <div class="flex items-start p-4 bg-gray-50 rounded-lg">
+                        <div class="mr-4 text-gray-500 text-2xl">☁️</div>
+                        <div>
+                            <h3 class="font-semibold text-xl">Weather Advisory</h3>
+                            <p id="weather-text" class="capitalize text-lg">Loading weather data...</p>
+                            <p id="weather-suggest" class="text-sm text-gray-600 mt-1">Suggestion: Loading...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Refresh Button -->
+                <button onclick="fetchSuggestion(document.getElementById('place-selector').value)"
+                        class="mt-6 w-full bg-blue-500 text-white py-3 rounded-lg font-medium hover:bg-blue-600">
+                    Refresh Data
+                </button>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-50 p-4 text-center text-sm text-gray-500">
+                Last updated: <span id="timestamp">--:--:--</span>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Emoji mapping for weather conditions
+        const weatherEmojis = {
+            'clear': '☀️',
+            'clouds': '☁️',
+            'rain': '🌧️',
+            'thunderstorm': '⛈️',
+            'snow': '❄️',
+            'mist': '🌫️',
+            'default': '🌈'
+        };
+
+        async function fetchSuggestion(place='KU') {
+            const url = `http://localhost:8000/${place}/suggestion`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Update location and time
+                    document.getElementById('location').textContent = `${data.place} Weather`;
+                    document.getElementById('timestamp').textContent = data.time;
+
+                    // Update temperature section
+                    document.getElementById('temperature').textContent =
+                        `Indoor: ${Math.round(data.temperature.indoor)}°C | Outdoor: ${Math.round(data.temperature.outdoor)}°C`;
+                    document.getElementById('temp-compare').textContent = data.temperature.suggestion;
+
+                    // Update humidity section
+                    document.getElementById('humidity').textContent =
+                        `Indoor: ${data.humidity.indoor.value}% | Outdoor: ${data.humidity.outdoor.value}%`;
+                    const humidCompare = document.getElementById('humid-compare');
+                    humidCompare.innerHTML = `
+                        <div class="font-medium">Comparison Results:</div>
+                        <div>🏠 Indoor: ${data.humidity.indoor.suggestion}</div>
+                        <div>🌳 Outdoor: ${data.humidity.outdoor.suggestion}</div>
+                    `;
+
+                    // Update weather section
+                    const weatherMain = data.weather.weather_main.toLowerCase();
+                    document.getElementById('weather-text').textContent = weatherMain;
+                    document.getElementById('weather-suggest').textContent = `Suggestion: ${data.weather.suggestion}`;
+                    document.getElementById('weather-emoji').textContent =
+                        weatherEmojis[weatherMain] || weatherEmojis['default'];
+
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert(`Failed to load data: ${err.message}`);
+            }
+        }
+
+        // Load data when page opens
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchSuggestion();
+
+            // Auto-refresh every 5 minutes
+            setInterval(() => {
+                const place = document.getElementById('place-selector').value;
+                fetchSuggestion(place);
+            }, 300000);
+        });
+    </script>
+</body>
+</html>
