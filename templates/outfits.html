@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dressing Recommendation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+  <nav class="navbar">
+    <a href="/">Home</a>
+    <a href="statistics">Statistic</a>
+    <a href="suggestion">Suggestions</a>
+    <a href="outfits">Outfits</a>
+  </nav>
+
+  <!-- Place selector -->
+  <div class="flex justify-center mb-4">
+    <label for="place-selector" class="mr-2 font-medium">Select Location:</label>
+    <select id="place-selector" onchange="fetchRecommendation(this.value)" class="px-4 py-2 rounded border">
+      <option value="KU">KU</option>
+      <option value="ladprao">Ladprao</option>
+    </select>
+  </div>
+
+  <!-- Main Content -->
+  <main class="container mx-auto p-4 max-w-xl">
+    <h1 class="text-3xl font-bold text-center mb-6">Dressing Recommendation</h1>
+
+    <!-- Card -->
+    <div class="bg-white rounded-xl shadow-lg weather-card">
+      <!-- Weather Info -->
+      <div class="p-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 id="location" class="text-2xl font-semibold">Loading...</h2>
+            <p id="weather-desc" class="text-gray-600 capitalize"></p>
+          </div>
+          <div id="temperature" class="text-4xl font-bold text-blue-500"></div>
+        </div>
+      </div>
+
+      <!-- Recommendation -->
+      <div id="recommendation" class="bg-blue-50 p-6 border-t">
+        <div class="flex items-center gap-4">
+          <span id="emoji" class="text-4xl"></span>
+          <p id="recommendation-text" class="text-lg font-medium"></p>
+        </div>
+        <img id="outfit-image" src="" alt="Outfit suggestion"
+             class="mt-4 w-full h-64 object-contain rounded-lg bg-white">
+      </div>
+    </div>
+
+    <!-- Refresh Button -->
+    <div class="mt-6 text-center">
+      <button onclick="fetchRecommendation()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+        Refresh Recommendation
+      </button>
+    </div>
+  </main>
+
+  <script>
+    async function fetchRecommendation(place='KU') {
+      const url = `http://localhost:8000/${place}/recommend/dressing`;
+
+      try {
+        const response = await fetch(url);
+
+        if (response.ok) {
+          const data = await response.json();
+
+          document.getElementById('location').textContent = data.place;
+          document.getElementById('temperature').textContent = `${Math.round(data.weather.temperature)}°C`;
+          document.getElementById('weather-desc').textContent = data.weather.description;
+          document.getElementById('recommendation-text').textContent = data.recommendation;
+          document.getElementById('emoji').textContent = data.emoji;
+          document.getElementById('outfit-image').src = data.image;
+
+        } else {
+          console.error('❌ Error fetching data:', response.status);
+          alert("❌ Unable to get a valid response from the server.");
+        }
+      } catch (err) {
+        console.error("⚠️ Fetch failed:", err);
+        alert("⚠️ Failed to load recommendation. Please check the server or try again.");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => fetchRecommendation());
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather Dashboard - Suggestions</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js CDN -->
+  <script src="/static/main.js" defer></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/">Home</a>
+    <a href="statistics">Statistic</a>
+    <a href="suggestion">Suggestions</a>
+    <a href="outfits">Outfits</a>
+  </nav>
+
+    <!-- Place selector -->
+  <div class="flex justify-center mb-4">
+    <label for="place-selector" class="mr-2 font-medium">Select Location:</label>
+    <select id="place-selector" onchange="fetchRecommendation(this.value)" class="px-4 py-2 rounded border">
+      <option value="KU">KU</option>
+      <option value="ladprao">Ladprao</option>
+    </select>
+  </div>
+
+  <main class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold text-center mb-8">Weather Data - Suggestions</h1>
+
+    <h2 class="text-xl font-semibold mb-4">Temperature and Humidity Suggestion</h2>
+
+    <canvas id="gaugeChart" width="400" height="200"></canvas>
+  </main>
+
+  <script>
+    // Fetch latest suggestion data for temperature and humidity
+    async function fetchSuggestion(place='KU') {
+      const url = `http://localhost:8000/${place}/suggestion`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (response.ok) {
+          // Display suggestion
+          const temperature = data.conditions.temperature;
+          const humidity = data.conditions.humidity;
+          const weather = data.conditions.weather
+
+          renderGaugeChart(temperature, humidity);
+        } else {
+          console.error('Error fetching data:', data);
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      }
+    }
+
+    function renderGaugeChart(temperature, humidity) {
+      const ctx = document.getElementById('gaugeChart').getContext('2d');
+
+      new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['Temperature', 'Humidity'],
+          datasets: [{
+            label: 'Weather Conditions',
+            data: [temperature, humidity],
+            backgroundColor: 'rgba(255, 159, 64, 0.2)',
+            borderColor: 'rgba(255, 159, 64, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            r: {
+              min: 0,
+              max: 100,
+              angleLines: { display: false },
+              suggestedMin: 0,
+              suggestedMax: 100
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(tooltipItem) {
+                  return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // You can change the place to 'KU' or 'Ladprao'
+    fetchSuggestion('KU');
+  </script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather Dashboard</title>
+  <script src="/static/main.js" defer></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index">Home</a>
+    <a href="statistics">Statistic</a>
+    <a href="suggestion">Suggestions</a>
+    <a href="outfits">Outfits</a>
+  </nav>
+
+  <main class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold text-center mb-8">Weather Data Dashboard</h1>
+    
+    <!-- Latest Weather Data Sections -->
+    <section>
+      <h2 class="text-xl font-semibold mb-4">Latest Weather Data (KU)</h2>
+      <div id="ku-latest" class="card p-4 bg-white shadow-lg rounded-lg"></div>
+    </section>
+    
+    <section>
+    <div></div>
+      <h2 class="text-xl font-semibold mb-4">Latest Weather Data (Ladprao)</h2>
+      <div id="ladprao-latest" class="card p-4 bg-white shadow-lg rounded-lg"></div>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,35 @@
+/* static/style.css */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f4f4f4;
+    color: #333;
+  }
+  .navbar {
+    background-color: #006699;
+    padding: 1rem;
+    display: flex;
+    gap: 2rem;
+  }
+  .navbar a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  .container {
+    padding: 2rem;
+  }
+  .card {
+    background: white;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .weather-card {
+    transition: all 0.3s ease;
+  }
+  .weather-card:hover {
+    transform: scale(1.02);
+  }
