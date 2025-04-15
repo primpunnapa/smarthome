@@ -24,7 +24,7 @@
       <label for="place-selector" class="mr-2 font-medium">Select Location:</label>
       <select id="place-selector" onchange="fetchSuggestion(this.value)" class="px-4 py-2 rounded border">
         <option value="KU">KU</option>
-        <option value="ladprao">Ladprao</option>
+        <option value="Ladprao">Ladprao</option>
       </select>
     </div>
 
@@ -35,7 +35,7 @@
             <div class="bg-blue-600 p-6 text-white">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 id="location" class="text-3xl font-bold">KU Weather</h1>
+                        <h1 id="location" class="text-3xl font-bold">KU</h1>
                         <p class="opacity-90">Current conditions</p>
                     </div>
                     <div id="weather-emoji" class="text-5xl">☁️</div>
@@ -111,7 +111,7 @@
 
                 if (response.ok) {
                     // Update location and time
-                    document.getElementById('location').textContent = `${data.place} Weather`;
+                    document.getElementById('location').textContent = `${data.place}`;
                     document.getElementById('timestamp').textContent = data.time;
 
                     // Update temperature section
