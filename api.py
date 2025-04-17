@@ -187,62 +187,6 @@ def get_outdoor() -> list[OutdoorData]:
     return result
 
 
-
-# @app.get("/{place}/recommend/dressing", response_model=dict)
-# async def get_dressing_recommendation(place: str):
-#     weather_data = await get_weather_data(place, "outdoor")
-#     if "error" in weather_data:
-#         raise HTTPException(status_code=404, detail=weather_data["error"])
-#
-#     return {
-#         "place": place,
-#         "recommendation": get_dressing_suggestion(
-#             temperature=weather_data.temperature,
-#             weather_main=weather_data.weather_main,
-#             description=weather_data.weather_description
-#         ),
-#         "weather_conditions": {
-#             "temperature": weather_data.temperature,
-#             "weather": weather_data.weather_main,
-#             "description": weather_data.weather_description
-#         }
-#     }
-
-
-@app.get("/{place}/recommend/activity", response_model=dict)
-async def get_activity_recommendation(place: str):
-    # Get both indoor and outdoor data for comprehensive suggestions
-    with pool.connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                SELECT temperature, humidity, main, description 
-                FROM KULA 
-                WHERE place = %s AND source = 'outdoor'
-                ORDER BY ts DESC 
-                LIMIT 1
-            """, [place])
-            outdoor = cursor.fetchone()
-
-            if not outdoor:
-                raise HTTPException(status_code=404, detail="No outdoor data found")
-
-    return {
-        "place": place,
-        "recommendation": get_activity_suggestion(
-            weather_main=outdoor[2],
-            description=outdoor[3],
-            temperature=outdoor[0],
-            humidity=outdoor[1]
-        ),
-        "conditions": {
-            "temperature": outdoor[0],
-            "humidity": outdoor[1],
-            "weather": outdoor[2],
-            "description": outdoor[3]
-        }
-    }
-
-
 @app.get("/{place}/{source}/analytics/hourly", response_model=dict)
 async def get_hourly_stats(
         place: str,

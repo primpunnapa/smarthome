@@ -15,6 +15,7 @@
       <a href="suggestion">Suggestions</a>
       <a href="outfits">Outfits</a>
       <a href="comparison">Comparison</a>
+      <a href="analytics">Analytics</a>
     </nav>
 
     <h1 class="text-3xl font-bold text-center mb-8">Weather Data - Comparison</h1>
@@ -63,7 +64,7 @@
                             <p id="humidity" class="text-lg font-medium">Indoor: --% | Outdoor: --%</p>
                             <p id="humid-compare" class="text-sm text-yellow-600 mt-1">Loading...</p>
                         </div>
-                    </div>`
+                    </div>
 
                     <!-- Weather Alert -->
                     <div class="flex items-start p-4 bg-gray-50 rounded-lg">
@@ -75,12 +76,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Refresh Button -->
-                <button onclick="fetchSuggestion(document.getElementById('place-selector').value)"
-                        class="mt-6 w-full bg-blue-500 text-white py-3 rounded-lg font-medium hover:bg-blue-600">
-                    Refresh Data
-                </button>
             </div>
 
             <!-- Footer -->

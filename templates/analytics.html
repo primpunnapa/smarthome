@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather Dashboard - Analytics</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <a href="/">Home</a>
+    <a href="statistics">Statistic</a>
+    <a href="suggestion">Suggestions</a>
+    <a href="outfits">Outfits</a>
+    <a href="comparison">Comparison</a>
+    <a href="analytics">Analytics</a>
+  </nav>
+
+  <h1 class="text-3xl font-bold text-center mb-8">Temperature vs Humidity Scatter plot</h1>
+
+  <!-- Place selector -->
+  <div class="flex justify-center mb-6">
+    <div class="w-full max-w-sm">
+      <label for="location" class="block text-lg font-medium text-gray-700 mb-1 text-center">Select Location:</label>
+      <select id="location" onchange="loadCharts()" class="w-full p-2 border rounded shadow-sm">
+        <option value="KU">KU</option>
+        <option value="Ladprao">Ladprao</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stats Cards Row -->
+  <div class="max-w-6xl mx-auto px-4 mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Indoor Stats Card -->
+    <div id="indoorStatsCard" class="bg-white rounded-xl shadow-md overflow-hidden">
+      <div class="p-6">
+        <h3 class="text-lg font-semibold text-blue-600 mb-4">Indoor Statistics</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <p class="text-sm text-blue-500 font-medium">Temperature</p>
+            <div class="mt-2">
+              <p class="text-s text-gray-500">Avg: <span id="indoorTempAvg" class="font-medium">--°C</span></p>
+              <p class="text-s text-gray-500">Min: <span id="indoorTempMin" class="font-medium">--°C</span></p>
+              <p class="text-s text-gray-500">Max: <span id="indoorTempMax" class="font-medium">--°C</span></p>
+            </div>
+          </div>
+          <div class="bg-green-50 p-4 rounded-lg">
+            <p class="text-sm text-green-500 font-medium">Humidity</p>
+            <div class="mt-2">
+              <p class="text-s text-gray-500">Avg: <span id="indoorHumidAvg" class="font-medium">--%</span></p>
+              <p class="text-s text-gray-500">Min: <span id="indoorHumidMin" class="font-medium">--%</span></p>
+              <p class="text-s text-gray-500">Max: <span id="indoorHumidMax" class="font-medium">--%</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Outdoor Stats Card -->
+    <div id="outdoorStatsCard" class="bg-white rounded-xl shadow-md overflow-hidden">
+      <div class="p-6">
+        <h3 class="text-lg font-semibold text-orange-600 mb-4">Outdoor Statistics</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-orange-50 p-4 rounded-lg">
+            <p class="text-sm text-orange-500 font-medium">Temperature</p>
+            <div class="mt-2">
+              <p class="text-s text-gray-500">Avg: <span id="outdoorTempAvg" class="font-medium">--°C</span></p>
+              <p class="text-s text-gray-500">Min: <span id="outdoorTempMin" class="font-medium">--°C</span></p>
+              <p class="text-s text-gray-500">Max: <span id="outdoorTempMax" class="font-medium">--°C</span></p>
+            </div>
+          </div>
+          <div class="bg-purple-50 p-4 rounded-lg">
+            <p class="text-sm text-purple-500 font-medium">Humidity</p>
+            <div class="mt-2">
+              <p class="text-s text-gray-500">Avg: <span id="outdoorHumidAvg" class="font-medium">--%</span></p>
+              <p class="text-s text-gray-500">Min: <span id="outdoorHumidMin" class="font-medium">--%</span></p>
+              <p class="text-s text-gray-500">Max: <span id="outdoorHumidMax" class="font-medium">--%</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Indoor Chart -->
+  <div class="max-w-4xl mx-auto px-4 mb-6">
+    <h2 class="text-xl font-semibold mb-2">Indoor Environment</h2>
+    <canvas id="indoorChart" height="300"></canvas>
+  </div>
+
+  <!-- Outdoor Chart -->
+  <div class="max-w-4xl mx-auto px-4">
+    <h2 class="text-xl font-semibold mb-2">Outdoor Environment</h2>
+    <canvas id="outdoorChart" height="300"></canvas>
+  </div>
+
+  <script>
+    let indoorChart, outdoorChart;
+
+    async function fetchData(endpoint, place) {
+      const res = await fetch(`http://localhost:8000/${endpoint}`);
+      const data = await res.json();
+      return data.filter(d => d.place.toLowerCase() === place.toLowerCase());
+    }
+
+    function calcStats(data) {
+      const temps = data.map(d => d.temperature);
+      const hums = data.map(d => d.humidity);
+      const avg = arr => (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2);
+      return {
+        temp: { min: Math.min(...temps).toFixed(1), max: Math.max(...temps).toFixed(1), avg: avg(temps) },
+        hum:  { min: Math.min(...hums).toFixed(1),  max: Math.max(...hums).toFixed(1),  avg: avg(hums) }
+      };
+    }
+
+    function createChart(ctx, label, points, color) {
+      return new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [{
+            label,
+            data: points,
+            backgroundColor: color,
+            borderColor: color.replace('0.6', '1'),
+            borderWidth: 1,
+            pointRadius: 6,
+            pointHoverRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: `${label} — Temperature vs Humidity`
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return [
+                    `Temp: ${context.parsed.x}°C`,
+                    `Humidity: ${context.parsed.y}%`
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Temperature (°C)'
+              },
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Humidity (%)'
+              },
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)'
+              },
+              min: 0,
+              max: 100
+            }
+          }
+        }
+      });
+    }
+
+    async function loadCharts() {
+      const place = document.getElementById("location").value;
+
+      const indoorData = await fetchData("indoor", place);
+      const outdoorData = await fetchData("outdoor", place);
+
+      const indoorPoints = indoorData.map(d => ({ x: d.temperature, y: d.humidity }));
+      const outdoorPoints = outdoorData.map(d => ({ x: d.temperature, y: d.humidity }));
+
+      // Destroy previous charts if they exist
+      if (indoorChart) indoorChart.destroy();
+      if (outdoorChart) outdoorChart.destroy();
+
+      // Create new charts
+      indoorChart = createChart(
+        document.getElementById("indoorChart").getContext("2d"),
+        "Indoor",
+        indoorPoints,
+        'rgba(59, 130, 246, 0.6)'
+      );
+
+      outdoorChart = createChart(
+        document.getElementById("outdoorChart").getContext("2d"),
+        "Outdoor",
+        outdoorPoints,
+        'rgba(239, 68, 68, 0.6)'
+      );
+
+      // Update stats cards
+      const indoorStats = calcStats(indoorData);
+      const outdoorStats = calcStats(outdoorData);
+
+      // Indoor Stats
+      document.getElementById("indoorTempAvg").textContent = `${indoorStats.temp.avg}°C`;
+      document.getElementById("indoorTempMin").textContent = `${indoorStats.temp.min}°C`;
+      document.getElementById("indoorTempMax").textContent = `${indoorStats.temp.max}°C`;
+      document.getElementById("indoorHumidAvg").textContent = `${indoorStats.hum.avg}%`;
+      document.getElementById("indoorHumidMin").textContent = `${indoorStats.hum.min}%`;
+      document.getElementById("indoorHumidMax").textContent = `${indoorStats.hum.max}%`;
+
+      // Outdoor Stats
+      document.getElementById("outdoorTempAvg").textContent = `${outdoorStats.temp.avg}°C`;
+      document.getElementById("outdoorTempMin").textContent = `${outdoorStats.temp.min}°C`;
+      document.getElementById("outdoorTempMax").textContent = `${outdoorStats.temp.max}°C`;
+      document.getElementById("outdoorHumidAvg").textContent = `${outdoorStats.hum.avg}%`;
+      document.getElementById("outdoorHumidMin").textContent = `${outdoorStats.hum.min}%`;
+      document.getElementById("outdoorHumidMax").textContent = `${outdoorStats.hum.max}%`;
+    }
+
+    document.addEventListener("DOMContentLoaded", loadCharts);
+  </script>
+</body>
+</html>
