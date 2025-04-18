@@ -6,29 +6,77 @@
   <script src="/static/main.js" defer></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .navbar {
+      background-color: #2563eb;
+      color: white;
+      padding: 1rem;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+    .navbar a {
+      padding-left: 1rem;
+      padding-right: 1rem;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-radius: 0.25rem;
+      transition-property: all;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 150ms;
+    }
+    .navbar a:hover {
+      background-color: #1d4ed8;
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
-    <a href="index">Home</a>
+    <a href="/">Home</a>
     <a href="statistics">Statistic</a>
     <a href="suggestion">Suggestions</a>
     <a href="outfits">Outfits</a>
+    <a href="comparison">Comparison</a>
+    <a href="analytics">Analytics</a>
   </nav>
 
   <main class="container mx-auto p-4">
     <h1 class="text-3xl font-bold text-center mb-8">Weather Data Dashboard</h1>
     
-    <!-- Latest Weather Data Sections -->
-    <section>
-      <h2 class="text-xl font-semibold mb-4">Latest Weather Data (KU)</h2>
-      <div id="ku-latest" class="card p-4 bg-white shadow-lg rounded-lg"></div>
-    </section>
+<!-- Latest Weather Data Sections -->
+<section class="mb-8">
+  <h2 class="text-2xl font-bold mb-6 text-gray-800">Latest Weather Data</h2>
+  
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- KU Card -->
+    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-md overflow-hidden border border-blue-200">
+      <div class="p-5">
+        <div class="flex items-center mb-4">
+          <svg class="w-6 h-6 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+          </svg>
+          <h3 class="text-xl font-semibold text-blue-800">KU Station</h3>
+        </div>
+        <div id="ku-latest" class="space-y-3 text-gray-700">
+          <!-- Data will be inserted here -->
+        </div>
+      </div>
+    </div>
     
-    <section>
-    <div></div>
-      <h2 class="text-xl font-semibold mb-4">Latest Weather Data (Ladprao)</h2>
-      <div id="ladprao-latest" class="card p-4 bg-white shadow-lg rounded-lg"></div>
-    </section>
+    <!-- Ladprao Card -->
+    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md overflow-hidden border border-green-200">
+      <div class="p-5">
+        <div class="flex items-center mb-4">
+          <svg class="w-6 h-6 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+          </svg>
+          <h3 class="text-xl font-semibold text-green-800">Ladprao Station</h3>
+        </div>
+        <div id="ladprao-latest" class="space-y-3 text-gray-700">
+          <!-- Data will be inserted here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
   </main>
 </body>
 </html>

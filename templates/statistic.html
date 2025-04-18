@@ -3,10 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <title>Weather Dashboard - Statistics</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js CDN -->
-  <script src="/static/main.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .navbar {
+      background-color: #2563eb;
+      color: white;
+      padding: 1rem;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+    .navbar a {
+      padding-left: 1rem;
+      padding-right: 1rem;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-radius: 0.25rem;
+      transition-property: all;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 150ms;
+    }
+    .navbar a:hover {
+      background-color: #1d4ed8;
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
@@ -14,103 +34,166 @@
     <a href="statistics">Statistic</a>
     <a href="suggestion">Suggestions</a>
     <a href="outfits">Outfits</a>
+    <a href="comparison">Comparison</a>
+    <a href="analytics">Analytics</a>
   </nav>
 
   <main class="container mx-auto p-4">
-    <h1 class="text-3xl font-bold text-center mb-8">Weather Data - Hourly Statistics</h1>
+    <h1 class="text-3xl font-bold text-center mb-8">Hourly Weather Statistics</h1>
 
-    <div class="mb-6">
-      <label for="date-picker" class="mr-4">Select Date:</label>
-      <input type="date" id="date-picker" name="date-picker" class="p-2 border rounded">
+    <div class="flex justify-center mb-6">
+      <div>
+        <label for="place-selector" class="mr-2 font-medium">Select Location:</label>
+        <select id="place-selector" class="px-4 py-2 rounded border">
+          <option value="KU">KU</option>
+          <option value="ladprao">Ladprao</option>
+        </select>
+      </div>
     </div>
 
-    <h2 class="text-xl font-semibold mb-4">Hourly Temperature and Humidity</h2>
-    
-    <canvas id="weatherChart" width="400" height="200"></canvas>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="text-xl font-semibold mb-4">Temperature (°C)</h2>
+        <canvas id="tempChart" height="200"></canvas>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="text-xl font-semibold mb-4">Humidity (%)</h2>
+        <canvas id="humidityChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow">
+      <h2 class="text-xl font-semibold mb-4">Hourly Data Table</h2>
+      <div class="overflow-x-auto">
+        <table id="hourlyTable" class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Temperature (°C)</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Humidity (%)</th>
+            </tr>
+          </thead>
+          <tbody id="hourlyData" class="bg-white divide-y divide-gray-200">
+            <!-- Data will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
   </main>
 
   <script>
-    // Fetch Hourly Stats for Temperature and Humidity
-    async function fetchHourlyStats(date) {
-      const url = `http://localhost:8000/KU/indoor/analytics/hourly?date=${date}`;  // You may modify this URL based on your API structure
+    let tempChart = null;
+    let humidityChart = null;
 
+    document.getElementById('place-selector').addEventListener('change', loadData);
+
+    // Load initial data
+    document.addEventListener('DOMContentLoaded', loadData);
+
+    async function loadData() {
+      const place = document.getElementById('place-selector').value;
+      const url = `http://localhost:8000/${place}/outdoor/analytics/hourly`;
+      
       try {
         const response = await fetch(url);
-        const data = await response.json();
-        
-        if (response.ok) {
-          // Process the data and render the chart
-          const labels = data.data.map(item => item.hour);
-          const tempData = data.data.map(item => item.temperature);
-          const humidityData = data.data.map(item => item.humidity);
+        const result = await response.json();
 
-          renderChart(labels, tempData, humidityData);
-        } else {
-          console.error('Error fetching data:', data);
-        }
-      } catch (err) {
-        console.error('Error fetching data:', err);
+        if (!result || !result.data) return;
+
+        // Process data for the last 24 hours (or available hours)
+        const hourlyData = result.data.slice(-24); // Get last 24 entries
+        
+        const labels = hourlyData.map(row => {
+          const dateTime = row.hour.split(' ');
+          return dateTime.length > 1 ? dateTime[1] : dateTime[0]; // Show just time if available
+        });
+        
+        const temps = hourlyData.map(row => row.temperature);
+        const hums = hourlyData.map(row => row.humidity);
+
+        // Update charts
+        renderCharts(labels, temps, hums);
+        
+        // Update table
+        updateHourlyTable(hourlyData);
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
       }
     }
 
-    function renderChart(labels, tempData, humidityData) {
-      const ctx = document.getElementById('weatherChart').getContext('2d');
+    function renderCharts(labels, temperatures, humidities) {
+      const tempCtx = document.getElementById('tempChart').getContext('2d');
+      const humidityCtx = document.getElementById('humidityChart').getContext('2d');
 
-      new Chart(ctx, {
+      // Destroy existing charts if they exist
+      if (tempChart) tempChart.destroy();
+      if (humidityChart) humidityChart.destroy();
+
+      // Temperature chart
+      tempChart = new Chart(tempCtx, {
         type: 'line',
         data: {
           labels: labels,
           datasets: [{
             label: 'Temperature (°C)',
-            data: tempData,
+            data: temperatures,
             borderColor: 'rgba(255, 99, 132, 1)',
-            fill: false,
-            tension: 0.1
-          }, {
-            label: 'Humidity (%)',
-            data: humidityData,
-            borderColor: 'rgba(54, 162, 235, 1)',
-            fill: false,
-            tension: 0.1
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            tension: 0.3,
+            fill: true
           }]
         },
         options: {
           responsive: true,
-          plugins: {
-            legend: {
-              position: 'top',
-            },
-            tooltip: {
-              callbacks: {
-                label: function(tooltipItem) {
-                  return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
-                }
-              }
-            }
-          },
           scales: {
-            x: {
-              title: {
-                display: true,
-                text: 'Time (Hourly)'
-              }
-            },
             y: {
-              title: {
-                display: true,
-                text: 'Value'
-              },
               beginAtZero: false
+            }
+          }
+        }
+      });
+
+      // Humidity chart
+      humidityChart = new Chart(humidityCtx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Humidity (%)',
+            data: humidities,
+            borderColor: 'rgba(54, 162, 235, 1)',
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100
             }
           }
         }
       });
     }
 
-    document.getElementById('date-picker').addEventListener('change', (e) => {
-      const selectedDate = e.target.value;
-      fetchHourlyStats(selectedDate);  // Call the function when date is selected
-    });
+    function updateHourlyTable(data) {
+      const tableBody = document.getElementById('hourlyData');
+      tableBody.innerHTML = '';
+
+      data.forEach(row => {
+        const [date, time] = row.hour.split(' ');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap">${time || row.hour}</td>
+          <td class="px-6 py-4 whitespace-nowrap">${row.temperature.toFixed(1)}</td>
+          <td class="px-6 py-4 whitespace-nowrap">${row.humidity.toFixed(1)}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
   </script>
 </body>
 </html>
