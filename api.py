@@ -53,10 +53,6 @@ async def read_suggestion(request: Request):
 async def read_outfits(request: Request):
     return templates.TemplateResponse("outfits.html", {"request": request})
 
-@app.get("/comparison", response_class=HTMLResponse)
-async def read_comparison(request: Request):
-    return templates.TemplateResponse("comparison.html", {"request": request})
-
 @app.get("/analytics", response_class=HTMLResponse)
 async def read_analytics(request: Request):
     return templates.TemplateResponse("analytics.html", {"request": request})
