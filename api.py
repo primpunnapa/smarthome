@@ -118,12 +118,12 @@ async def get_temp_and_humidity_by_date(place: str, date: str = Query(...)):
             }
 
 @app.get("/{place}/suggestion", response_model=SuggestionResponse)
-async def compare_conditions(place: str):
+async def compare_conditions(place: str, date: str = None):
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
-                # Get paired indoor/outdoor data within 10 minutes
-                cursor.execute("""
+                # Base query
+                query = """
                     SELECT 
                         i.temperature as indoor_temp,
                         i.humidity as indoor_humidity,
@@ -131,40 +131,55 @@ async def compare_conditions(place: str):
                         o.temperature as outdoor_temp,
                         o.humidity as outdoor_humidity,
                         o.main as weather_main,
+                        o.description as weather_description,
                         o.ts as outdoor_time,
                         TIMESTAMPDIFF(MINUTE, i.ts, o.ts) as time_diff
                     FROM 
                         (SELECT temperature, humidity, ts 
                          FROM KULA 
                          WHERE place = %s AND source = 'indoor'
+                         {date_filter}
                          ORDER BY ts DESC LIMIT 1) i,
-                        (SELECT temperature, humidity, main, ts 
+                        (SELECT temperature, humidity, main, description, ts 
                          FROM KULA 
                          WHERE place = %s AND source = 'outdoor'
+                         {date_filter}
                          ORDER BY ts DESC LIMIT 1) o
                     WHERE ABS(TIMESTAMPDIFF(MINUTE, i.ts, o.ts)) < 5
-                """, (place, place))
-
+                """
+                
+                # Add date filter if provided
+                date_filter = ""
+                params = (place, place)
+                if date:
+                    date_filter = "AND DATE(ts) = %s"
+                    params = (place, date, place, date)
+                
+                # Format the final query
+                final_query = query.format(date_filter=date_filter)
+                
+                cursor.execute(final_query, params)
                 result = cursor.fetchone()
 
                 if not result:
                     raise HTTPException(
                         status_code=404,
-                        detail="No matching indoor/outdoor pairs within 10 minutes"
+                        detail="No matching indoor/outdoor pairs within 5 minutes"
                     )
 
-                # Extract tuple values (order matches SELECT)
+                # Extract tuple values
                 indoor = {
-                    'temperature': result[0],  # indoor_temp
-                    'humidity': result[1],  # indoor_humidity
-                    'recorded_at': result[2]  # indoor_time
+                    'temperature': result[0],
+                    'humidity': result[1],
+                    'recorded_at': result[2]
                 }
 
                 outdoor = {
-                    'temperature': result[3],  # outdoor_temp
-                    'humidity': result[4],  # outdoor_humidity
-                    'weather_main': result[5],  # weather_main
-                    'recorded_at': result[6]  # outdoor_time
+                    'temperature': result[3],
+                    'humidity': result[4],
+                    'weather_main': result[5],
+                    'weather_description': result[6],
+                    'recorded_at': result[7]
                 }
 
                 # Generate comparisons
@@ -172,7 +187,6 @@ async def compare_conditions(place: str):
 
                 return {
                     "place": place,
-                    # "time": datetime.now().isoformat(),
                     "time": str(outdoor['recorded_at']),
                     "temperature": {
                         "indoor": indoor['temperature'],
@@ -191,6 +205,7 @@ async def compare_conditions(place: str):
                     },
                     "weather": {
                         "weather_main": outdoor['weather_main'],
+                        "weather_description": outdoor['weather_description'],
                         "suggestion": get_rain_suggestion(outdoor['weather_main'], indoor['temperature'])
                     }
                 }
@@ -200,7 +215,6 @@ async def compare_conditions(place: str):
             status_code=500,
             detail=f"Error comparing data: {str(e)}"
         )
-
 @app.get("/indoor")
 def get_indoor() -> list[IndoorData]:
     with pool.connection() as conn, conn.cursor() as cs:
