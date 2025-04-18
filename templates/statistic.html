@@ -6,6 +6,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     .navbar {
       background-color: #2563eb;
@@ -68,7 +69,7 @@
         <table id="hourlyTable" class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hour</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Temperature (°C)</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Humidity (%)</th>
             </tr>
@@ -92,33 +93,38 @@
 
     async function loadData() {
       const place = document.getElementById('place-selector').value;
-      const url = `http://localhost:8000/${place}/outdoor/analytics/hourly`;
+      const url = `/${place}/outdoor/analytics/hourly`;
       
       try {
         const response = await fetch(url);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        }
         const result = await response.json();
-
-        if (!result || !result.data) return;
-
-        // Process data for the last 24 hours (or available hours)
-        const hourlyData = result.data.slice(-24); // Get last 24 entries
+    
+        if (!result || !result.data) {
+          console.error('No data received from API');
+          return;
+        }
+    
+        // Process data
+        const hourlyData = result.data;
+        const labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+        const temps = Array(24).fill(null);
+        const hums = Array(24).fill(null);
         
-        const labels = hourlyData.map(row => {
-          const dateTime = row.hour.split(' ');
-          return dateTime.length > 1 ? dateTime[1] : dateTime[0]; // Show just time if available
+        hourlyData.forEach(row => {
+          temps[row.hour] = row.temperature;
+          hums[row.hour] = row.humidity;
         });
-        
-        const temps = hourlyData.map(row => row.temperature);
-        const hums = hourlyData.map(row => row.humidity);
-
-        // Update charts
+    
         renderCharts(labels, temps, hums);
-        
-        // Update table
-        updateHourlyTable(hourlyData);
+        updateHourlyTable(labels, temps, hums);
         
       } catch (error) {
         console.error('Error loading data:', error);
+        alert(`Error loading data: ${error.message}`);
       }
     }
 
@@ -141,7 +147,8 @@
             borderColor: 'rgba(255, 99, 132, 1)',
             backgroundColor: 'rgba(255, 99, 132, 0.2)',
             tension: 0.3,
-            fill: true
+            fill: true,
+            spanGaps: true // This allows the line to skip null values
           }]
         },
         options: {
@@ -179,17 +186,17 @@
       });
     }
 
-    function updateHourlyTable(data) {
+    function updateHourlyTable(labels, temps, hums) {
       const tableBody = document.getElementById('hourlyData');
       tableBody.innerHTML = '';
 
-      data.forEach(row => {
-        const [date, time] = row.hour.split(' ');
+      // Show all 24 hours in the table
+      labels.forEach((hour, index) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td class="px-6 py-4 whitespace-nowrap">${time || row.hour}</td>
-          <td class="px-6 py-4 whitespace-nowrap">${row.temperature.toFixed(1)}</td>
-          <td class="px-6 py-4 whitespace-nowrap">${row.humidity.toFixed(1)}</td>
+          <td class="px-6 py-4 whitespace-nowrap">${hour}</td>
+          <td class="px-6 py-4 whitespace-nowrap">${temps[index] !== null ? temps[index].toFixed(1) : 'N/A'}</td>
+          <td class="px-6 py-4 whitespace-nowrap">${hums[index] !== null ? hums[index].toFixed(1) : 'N/A'}</td>
         `;
         tableBody.appendChild(tr);
       });
