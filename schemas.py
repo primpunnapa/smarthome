@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import List, Optional, Dict, Literal
 
 class IndoorData(BaseModel):
     main: str
@@ -28,10 +29,27 @@ class SuggestionResponse(BaseModel):
     humidity: dict
     weather: dict
 
-# class RecommendationResponse(BaseModel):
-#     status: str
-#     indoor: IndoorData
-#     outdoor: OutdoorData
-#     recommendations: List[str]
-#     time: datetime
+class WeatherData(BaseModel):
+    temperature: float
+    humidity: float
+    main: str
+    description: str
 
+class DressingRecommendationResponse(BaseModel):
+    place: str
+    weather: WeatherData
+    recommendation: str
+    emoji: str
+    image: str
+
+class HourlyDataPoint(BaseModel):
+    hour: int
+    temperature: float
+    humidity: float
+    min_temp: float
+    max_temp: float
+
+class HourlyStatsResponse(BaseModel):
+    place: str
+    source: str
+    data: List[HourlyDataPoint]

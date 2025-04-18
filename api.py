@@ -1,11 +1,10 @@
-from fastapi import FastAPI,HTTPException,Request,Query
+from fastapi import FastAPI,HTTPException,Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from dbutils.pooled_db import PooledDB
 import pymysql
-from typing import List
 from config import DB_HOST, DB_USER, DB_PASSWD, DB_NAME
 from schemas import *
 from recommendations import *
@@ -36,21 +35,30 @@ pool = PooledDB(creator=pymysql,
 async def read_index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+
 @app.get("/statistics", response_class=HTMLResponse)
 async def read_index(request: Request):
     return templates.TemplateResponse("statistic.html", {"request": request})
+
+
 @app.get("/suggestion", response_class=HTMLResponse)
 async def read_index(request: Request):
     return templates.TemplateResponse("suggestion.html", {"request": request})
+
+
 @app.get("/outfits", response_class=HTMLResponse)
 async def read_index(request: Request):
     return templates.TemplateResponse("outfits.html", {"request": request})
+
+
 @app.get("/comparison", response_class=HTMLResponse)
 async def read_index(request: Request):
     return templates.TemplateResponse("comparison.html", {"request": request})
+
 @app.get("/analytics", response_class=HTMLResponse)
 async def read_index(request: Request):
     return templates.TemplateResponse("analytics.html", {"request": request})
+
 @app.get("/{place}/{source}/lastest", response_model=WeatherResponse)
 async def get_weather_data(place, source):
     with pool.connection() as conn:
@@ -80,42 +88,6 @@ async def get_weather_data(place, source):
 
             return {"error": "No data found"}
 
-@app.get("/{place}/available-dates", response_model=List[str])
-async def get_available_dates(place: str):
-    with pool.connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                SELECT DISTINCT DATE(ts) as date_only
-                FROM KULA
-                WHERE place = %s
-                ORDER BY date_only DESC
-            """, (place,))
-            result = [row[0].strftime("%Y-%m-%d") for row in cursor.fetchall()]
-    return result
-
-@app.get("/{place}/temperature-humidity", response_model=dict)
-async def get_temp_and_humidity_by_date(place: str, date: str = Query(...)):
-    with pool.connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                SELECT 
-                    HOUR(ts) as hour,
-                    ROUND(AVG(temperature), 2) as avg_temp,
-                    ROUND(AVG(humidity), 2) as avg_humidity
-                FROM KULA
-                WHERE place = %s AND DATE(ts) = %s
-                GROUP BY hour
-                ORDER BY hour
-            """, (place, date))
-            rows = cursor.fetchall()
-            return {
-                "date": date,
-                "data": [{
-                    "hour": f"{row[0]:02d}:00",
-                    "temperature": row[1],
-                    "humidity": row[2]
-                } for row in rows]
-            }
 
 @app.get("/{place}/suggestion", response_model=SuggestionResponse)
 async def compare_conditions(place: str):
@@ -137,11 +109,13 @@ async def compare_conditions(place: str):
                         (SELECT temperature, humidity, ts 
                          FROM KULA 
                          WHERE place = %s AND source = 'indoor'
-                         ORDER BY ts DESC) i,
+                         ORDER BY ts DESC
+                         LIMIT 1) i,
                         (SELECT temperature, humidity, main, ts 
                          FROM KULA 
                          WHERE place = %s AND source = 'outdoor'
-                         ORDER BY ts DESC) o
+                         ORDER BY ts DESC
+                         LIMIT 1) o
                     WHERE ABS(TIMESTAMPDIFF(MINUTE, i.ts, o.ts)) < 5
                 """, (place, place))
 
@@ -195,6 +169,7 @@ async def compare_conditions(place: str):
                     }
                 }
 
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -227,7 +202,7 @@ def get_outdoor() -> list[OutdoorData]:
     return result
 
 
-@app.get("/{place}/{source}/analytics/hourly", response_model=dict)
+@app.get("/{place}/{source}/analytics/hourly", response_model=HourlyStatsResponse)
 async def get_hourly_stats(
         place: str,
         source: str,  # 'indoor' or 'outdoor'
@@ -245,7 +220,9 @@ async def get_hourly_stats(
                     ROUND(AVG(temperature), 2) as avg_temp,
                     ROUND(AVG(humidity), 2) as avg_humidity,
                     MAX(temperature) as max_temp,
-                    MIN(temperature) as min_temp
+                    MIN(temperature) as min_temp,
+                    MAX(humidity) as max_humid,
+                    MIN(humidity) as min_humid
                 FROM KULA
                 WHERE place = %s 
                   AND source = %s
@@ -256,24 +233,27 @@ async def get_hourly_stats(
                 source,
             ])
 
-            return {
-                "place": place,
-                "source": source,
-                "data": [
-                    {
-                        "hour": row[0],
-                        "temperature": row[1],
-                        "humidity": row[2],
-                        "min_temp": row[3],
-                        "max_temp": row[4]
-                    }
-                    for row in cursor.fetchall()
-                ]
-            }
+            data = cursor.fetchall()
 
-@app.get("/{place}/recommend/dressing", response_model=dict)
+            return HourlyStatsResponse(
+                place=place,
+                source=source,
+                data=[
+                    HourlyDataPoint(
+                        hour=row[0],
+                        temperature=row[1],
+                        humidity=row[2],
+                        min_temp=row[3],
+                        max_temp=row[4]
+                    )
+                    for row in data
+                ]
+            )
+
+@app.get("/{place}/recommend/dressing", response_model=DressingRecommendationResponse)
 async def get_dressing_recommendation(place: str):
     weather_data = await get_weather_data(place, "outdoor")
+
     if "error" in weather_data:
         raise HTTPException(status_code=404, detail=weather_data["error"])
 
@@ -283,17 +263,10 @@ async def get_dressing_recommendation(place: str):
         description=weather_data.weather_description
     )
 
-    return {
-        "place": place,
-        "recommendation": suggestion,
-        "emoji": emoji,
-        "image": image,
-        "weather": {
-            "temperature": weather_data.temperature,
-            "main": weather_data.weather_main,
-            "description": weather_data.weather_description
-        }
-    }
+    return DressingRecommendationResponse(
+        place=place, recommendation=suggestion, emoji=emoji, image=image,
+        weather=WeatherData(temperature=weather_data.temperature, main=weather_data.weather_main,
+                                              description=weather_data.weather_description))
 
 
 # python3 -m venv venv
