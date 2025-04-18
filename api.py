@@ -1,10 +1,11 @@
-from fastapi import FastAPI,HTTPException,Request
+from fastapi import FastAPI,HTTPException,Request,Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from dbutils.pooled_db import PooledDB
 import pymysql
+from typing import List
 from config import DB_HOST, DB_USER, DB_PASSWD, DB_NAME
 from schemas import *
 from recommendations import *
@@ -47,6 +48,9 @@ async def read_index(request: Request):
 @app.get("/comparison", response_class=HTMLResponse)
 async def read_index(request: Request):
     return templates.TemplateResponse("comparison.html", {"request": request})
+@app.get("/analytics", response_class=HTMLResponse)
+async def read_index(request: Request):
+    return templates.TemplateResponse("analytics.html", {"request": request})
 @app.get("/{place}/{source}/lastest", response_model=WeatherResponse)
 async def get_weather_data(place, source):
     with pool.connection() as conn:
@@ -76,6 +80,42 @@ async def get_weather_data(place, source):
 
             return {"error": "No data found"}
 
+@app.get("/{place}/available-dates", response_model=List[str])
+async def get_available_dates(place: str):
+    with pool.connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT DISTINCT DATE(ts) as date_only
+                FROM KULA
+                WHERE place = %s
+                ORDER BY date_only DESC
+            """, (place,))
+            result = [row[0].strftime("%Y-%m-%d") for row in cursor.fetchall()]
+    return result
+
+@app.get("/{place}/temperature-humidity", response_model=dict)
+async def get_temp_and_humidity_by_date(place: str, date: str = Query(...)):
+    with pool.connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    HOUR(ts) as hour,
+                    ROUND(AVG(temperature), 2) as avg_temp,
+                    ROUND(AVG(humidity), 2) as avg_humidity
+                FROM KULA
+                WHERE place = %s AND DATE(ts) = %s
+                GROUP BY hour
+                ORDER BY hour
+            """, (place, date))
+            rows = cursor.fetchall()
+            return {
+                "date": date,
+                "data": [{
+                    "hour": f"{row[0]:02d}:00",
+                    "temperature": row[1],
+                    "humidity": row[2]
+                } for row in rows]
+            }
 
 @app.get("/{place}/suggestion", response_model=SuggestionResponse)
 async def compare_conditions(place: str):

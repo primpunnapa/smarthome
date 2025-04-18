@@ -3,101 +3,308 @@
 <head>
   <meta charset="UTF-8">
   <title>Weather Dashboard - Suggestions</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js CDN -->
-  <script src="/static/main.js" defer></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .navbar {
+      background-color: #2563eb;
+      color: white;
+      padding: 1rem;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+    .navbar a {
+      padding-left: 1rem;
+      padding-right: 1rem;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-radius: 0.25rem;
+      transition-property: all;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 150ms;
+    }
+    .navbar a:hover {
+      background-color: #1d4ed8;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-gray-50 min-h-screen">
   <nav class="navbar">
     <a href="/">Home</a>
     <a href="statistics">Statistic</a>
     <a href="suggestion">Suggestions</a>
     <a href="outfits">Outfits</a>
+    <a href="comparison">Comparison</a>
+    <a href="analytics">Analytics</a>
   </nav>
+  <main class="container mx-auto p-4 md:p-6">
+    <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Weather Suggestions</h1>
 
-    <!-- Place selector -->
-  <div class="flex justify-center mb-4">
-    <label for="place-selector" class="mr-2 font-medium">Select Location:</label>
-    <select id="place-selector" onchange="fetchRecommendation(this.value)" class="px-4 py-2 rounded border">
-      <option value="KU">KU</option>
-      <option value="ladprao">Ladprao</option>
-    </select>
-  </div>
+    <!-- Selector Section -->
+    <div class="date-picker-container max-w-2xl mx-auto mb-8">
+      <div class="flex flex-col md:flex-row gap-4 items-center">
+        <div class="flex-1 w-full">
+          <label for="place-selector" class="block mb-2 font-medium text-gray-700">
+            <i class="fas fa-map-marker-alt mr-2"></i>Select Location
+          </label>
+          <select id="place-selector" class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="KU">KU Station</option>
+            <option value="ladprao">Ladprao Station</option>
+          </select>
+        </div>
+        <div class="flex-1 w-full relative">
+          <label for="date-picker" class="block mb-2 font-medium text-gray-700">
+            <i class="far fa-calendar-alt mr-2"></i>Select Date
+          </label>
+          <input type="date" id="date-picker" class="date-input w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
+          <div id="date-error" class="invalid-feedback hidden absolute text-red-500 text-sm mt-1">
+            <i class="fas fa-exclamation-circle mr-1"></i> No data available for this date
+          </div>
+        </div>
+        <div class="flex items-end">
+          <button id="fetch-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg flex items-center">
+            <i class="fas fa-search mr-2"></i> Get Suggestions
+          </button>
+        </div>
+      </div>
+    </div>
 
-  <main class="container mx-auto p-4">
-    <h1 class="text-3xl font-bold text-center mb-8">Weather Data - Suggestions</h1>
+    <!-- Loading State -->
+    <div id="loading" class="text-center hidden my-8">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+      <p class="text-gray-600">Loading weather suggestions...</p>
+    </div>
 
-    <h2 class="text-xl font-semibold mb-4">Temperature and Humidity Suggestion</h2>
+    <!-- Cards Section -->
+    <div id="suggestion-cards" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
 
-    <canvas id="gaugeChart" width="400" height="200"></canvas>
+    <!-- No Data Message -->
+    <div id="no-data" class="hidden text-center py-12">
+      <i class="fas fa-cloud-sun text-4xl text-gray-400 mb-4"></i>
+      <h3 class="text-xl font-semibold text-gray-600">No weather data available</h3>
+      <p class="text-gray-500 mt-2">Please select a different date or location</p>
+    </div>
   </main>
 
   <script>
-    // Fetch latest suggestion data for temperature and humidity
-    async function fetchSuggestion(place='KU') {
-      const url = `http://localhost:8000/${place}/suggestion`;
-
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (response.ok) {
-          // Display suggestion
-          const temperature = data.conditions.temperature;
-          const humidity = data.conditions.humidity;
-          const weather = data.conditions.weather
-
-          renderGaugeChart(temperature, humidity);
-        } else {
-          console.error('Error fetching data:', data);
-        }
-      } catch (err) {
-        console.error('Error fetching data:', err);
-      }
-    }
-
-    function renderGaugeChart(temperature, humidity) {
-      const ctx = document.getElementById('gaugeChart').getContext('2d');
-
-      new Chart(ctx, {
-        type: 'radar',
-        data: {
-          labels: ['Temperature', 'Humidity'],
-          datasets: [{
-            label: 'Weather Conditions',
-            data: [temperature, humidity],
-            backgroundColor: 'rgba(255, 159, 64, 0.2)',
-            borderColor: 'rgba(255, 159, 64, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            r: {
-              min: 0,
-              max: 100,
-              angleLines: { display: false },
-              suggestedMin: 0,
-              suggestedMax: 100
-            }
-          },
-          plugins: {
-            tooltip: {
-              callbacks: {
-                label: function(tooltipItem) {
-                  return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
-                }
-              }
-            }
-          }
+    // Global variables
+    let availableDates = [];
+    let currentPlace = 'KU';
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', async function() {
+      const datePicker = document.getElementById('date-picker');
+      const placeSelector = document.getElementById('place-selector');
+      const fetchBtn = document.getElementById('fetch-btn');
+      
+      // Set default date to today
+      const today = new Date().toISOString().split('T')[0];
+      datePicker.value = today;
+      datePicker.max = today; // Prevent future dates
+      
+      // Initialize with KU data
+      await initializeData('KU');
+      
+      // Handle location changes
+      placeSelector.addEventListener('change', async function() {
+        currentPlace = this.value;
+        await initializeData(currentPlace);
+        validateDate(datePicker.value);
+      });
+      
+      // Handle date changes
+      datePicker.addEventListener('change', function() {
+        validateDate(this.value);
+      });
+      
+      // Handle fetch button click
+      fetchBtn.addEventListener('click', function() {
+        if (validateDate(datePicker.value)) {
+          fetchSuggestions();
         }
       });
+    });
+    
+    // Initialize data for a location
+    async function initializeData(place) {
+      try {
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('suggestion-cards').innerHTML = '';
+        document.getElementById('no-data').classList.add('hidden');
+        
+        const response = await fetch(`http://localhost:8000/${place}/available-dates`);
+        if (!response.ok) throw new Error('Failed to fetch dates');
+        
+        availableDates = await response.json();
+        console.log(`Available dates for ${place}:`, availableDates);
+        
+        // Set the date picker to the most recent available date
+        if (availableDates.length > 0) {
+          const mostRecentDate = availableDates[0]; // Assuming dates are sorted newest first
+          document.getElementById('date-picker').value = mostRecentDate;
+          validateDate(mostRecentDate); // Validate the newly set date
+        }
+        
+        document.getElementById('loading').classList.add('hidden');
+      } catch (error) {
+        console.error('Error initializing data:', error);
+        availableDates = [];
+        document.getElementById('loading').classList.add('hidden');
+        showError('Failed to load available dates. Please try again later.');
+      }
     }
-
-    // You can change the place to 'KU' or 'Ladprao'
-    fetchSuggestion('KU');
+    
+    // Validate the selected date
+    function validateDate(selectedDate) {
+      const dateError = document.getElementById('date-error');
+      
+      if (!availableDates || availableDates.length === 0) {
+        dateError.textContent = 'No dates available for this location';
+        dateError.classList.remove('hidden');
+        return false;
+      }
+      
+      // Simple direct comparison (since formats match)
+      const isValid = availableDates.includes(selectedDate);
+      
+      if (isValid) {
+        dateError.classList.add('hidden');
+        return true;
+      } else {
+        dateError.textContent = 'No data available for this date. Please select from available dates.';
+        dateError.classList.remove('hidden');
+        return false;
+      }
+    }
+    
+    // Show error message
+    function showError(message) {
+      const noData = document.getElementById('no-data');
+      noData.querySelector('h3').textContent = message;
+      noData.classList.remove('hidden');
+    }
+    
+    // Fetch suggestions for selected date and place
+    async function fetchSuggestions() {
+      const date = document.getElementById('date-picker').value;
+      const place = document.getElementById('place-selector').value;
+      
+      // Show loading state
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('suggestion-cards').innerHTML = '';
+      document.getElementById('no-data').classList.add('hidden');
+      
+      try {
+        const url = `http://localhost:8000/${place}/suggestion?date=${date}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Hide loading
+        document.getElementById('loading').classList.add('hidden');
+        
+        if (!data || Object.keys(data).length === 0) {
+          showError('No data available for selected date');
+          return;
+        }
+        
+        renderSuggestionCards(data, place);
+      } catch (error) {
+        console.error('Error fetching suggestions:', error);
+        document.getElementById('loading').classList.add('hidden');
+        showError('Error fetching data. Please try again.');
+      }
+    }
+    
+    // Render suggestion cards
+    function renderSuggestionCards(data, location) {
+      const container = document.getElementById('suggestion-cards');
+      const locationName = location === 'KU' ? 'KU Station' : 'Ladprao Station';
+      
+      // Clear previous cards
+      container.innerHTML = '';
+      
+      // Determine weather icon
+      let weatherIcon = 'fa-cloud';
+      if (data.weather) {
+        const mainWeather = data.weather.weather_main.toLowerCase();
+        if (mainWeather.includes('rain')) weatherIcon = 'fa-cloud-rain';
+        else if (mainWeather.includes('clear')) weatherIcon = 'fa-sun';
+        else if (mainWeather.includes('cloud')) weatherIcon = 'fa-cloud';
+      }
+      
+      // Determine temperature color
+      const tempColor = data.temperature?.outdoor > 30 ? 'text-red-500' : 
+                       data.temperature?.outdoor < 20 ? 'text-blue-500' : 'text-orange-500';
+      
+      // Determine humidity color
+      const humidityColor = data.humidity?.outdoor?.value > 70 ? 'text-blue-500' : 
+                           data.humidity?.outdoor?.value < 30 ? 'text-yellow-500' : 'text-green-500';
+      
+      const cardHTML = `
+        <div class="weather-card">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">
+              <i class="fas fa-map-marker-alt text-blue-500 mr-2"></i>${locationName}
+            </h2>
+          </div>
+          
+          ${data.weather ? `
+            <div class="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-100">
+              <div class="flex items-center">
+                <i class="fas ${weatherIcon} text-3xl text-blue-500 mr-3"></i>
+                <div>
+                  <h3 class="font-bold text-lg">${data.weather.weather_main}</h3>
+                  <p class="text-gray-600">${data.weather.weather_description || ''}</p>
+                </div>
+              </div>
+              <p class="mt-3 text-sm bg-white p-2 rounded border border-gray-200">
+                <i class="fas fa-lightbulb text-yellow-500 mr-1"></i> ${data.weather.suggestion}
+              </p>
+            </div>
+          ` : ''}
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${data.temperature ? `
+              <div class="bg-orange-50 rounded-lg p-4 border border-orange-100">
+                <h3 class="font-bold text-lg mb-2">
+                  <i class="fas fa-thermometer-half text-orange-500 mr-2"></i>Temperature
+                </h3>
+                <div class="space-y-2">
+                  <p>Indoor: <span class="font-medium">${data.temperature.indoor}°C</span></p>
+                  <p>Outdoor: <span class="font-medium ${tempColor}">${data.temperature.outdoor}°C</span></p>
+                </div>
+                <p class="mt-3 text-sm bg-white p-2 rounded border border-gray-200">
+                  <i class="fas fa-lightbulb text-yellow-500 mr-1"></i> ${data.temperature.suggestion}
+                </p>
+              </div>
+            ` : ''}
+            
+            ${data.humidity ? `
+              <div class="bg-teal-50 rounded-lg p-4 border border-teal-100">
+                <h3 class="font-bold text-lg mb-2">
+                  <i class="fas fa-tint text-teal-500 mr-2"></i>Humidity
+                </h3>
+                <div class="space-y-2">
+                  <p>Indoor: <span class="font-medium">${data.humidity.indoor.value}%</span></p>
+                  <p>Outdoor: <span class="font-medium ${humidityColor}">${data.humidity.outdoor.value}%</span></p>
+                </div>
+                <p class="mt-3 text-sm bg-white p-2 rounded border border-gray-200">
+                  <i class="fas fa-lightbulb text-yellow-500 mr-1"></i> ${data.humidity.indoor.suggestion}
+                </p>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+      
+      container.innerHTML = cardHTML;
+    }
   </script>
 </body>
 </html>

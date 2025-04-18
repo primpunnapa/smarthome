@@ -29,6 +29,7 @@ A web application that visualizes indoor/outdoor weather data with scatter plots
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/{place}/{source}/lastest` | GET | Get latest weather data for a location |
+| `/{place}/temperature-humidity` | GET | get all temperature and humidity by date |
 | `/indoor` | GET | List all indoor sensor data |
 | `/outdoor` | GET | List all outdoor sensor data |
 
@@ -41,6 +42,7 @@ A web application that visualizes indoor/outdoor weather data with scatter plots
 #### 3. Analytics Endpoints
 | Endpoint | Method | Description |
 |----------|--------|-------------|
+| `/{place}/available-dates` | GET | Get available date|
 | `/{place}/{source}/analytics/hourly` | GET | Get hourly aggregated statistics |
 
 ### Key Technical Features
