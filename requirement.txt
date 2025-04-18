@@ -3,3 +3,4 @@ uvicorn
 pymysql
 dbutils
 jinja2
+cryptography

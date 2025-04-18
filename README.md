@@ -86,5 +86,5 @@ A web application that visualizes indoor/outdoor weather data with scatter plots
    * Update the connection settings in config.py  
 
 ### Frontend Setup
-
+```bash
 uvicorn api:app --port 8000 --reload
