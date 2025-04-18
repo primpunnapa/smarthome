@@ -4,6 +4,10 @@ This project monitors indoor temperature and humidity using the KY-015 sensor co
 The system integrates this data with outdoor weather data from a public API to provide real-time insights, alerts, 
 and recommendations for maintaining a comfortable home environment.
 
+# Members
+Supidcha NILSARIKA  ID : 6610545545  
+Punnapa PRAMOTEKUL  ID : 6610545863  
+
 # Weather Dashboard
 
 A web application that visualizes indoor/outdoor weather data with scatter plots, statistical summaries and recommendation actions.
@@ -72,7 +76,6 @@ A web application that visualizes indoor/outdoor weather data with scatter plots
 1. Clone the repository:
    ```bash
    git clone https://github.com/primpunnapa/smarthome.git
-   cd weather-analytics
 
 2. Create and activate a virtual environment:
     ```bash
@@ -81,7 +84,7 @@ A web application that visualizes indoor/outdoor weather data with scatter plots
     venv\Scripts\activate     # Windows
 3. Install Python dependencies:
     ```bash
-    pip install -r requirements.txt
+    pip install -r requirement.txt
    
 4. Database setup:   
    * Create a MySQL database  

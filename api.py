@@ -267,7 +267,7 @@ async def get_hourly_stats(
                 """, (place, source))
                 
                 results = cursor.fetchall()
-                print("Query results:", results)  # Debug print
+                # print("Query results:", results)  # Debug print
                 
                 return HourlyStatsResponse(
                     place=place,
