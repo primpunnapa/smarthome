@@ -1,0 +1,140 @@
+[
+    {
+        "id": "ab58ca7fdb927bc8",
+        "type": "tab",
+        "label": "Flow 6 KY-015",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "413bba63dc3ca2df",
+        "type": "mqtt in",
+        "z": "ab58ca7fdb927bc8",
+        "name": "",
+        "topic": "b6610545863/kidbright",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "0c73182ecde1dca1",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 100,
+        "y": 80,
+        "wires": [
+            [
+                "63b9173bd2392919"
+            ]
+        ]
+    },
+    {
+        "id": "1914ce23e83f2719",
+        "type": "debug",
+        "z": "ab58ca7fdb927bc8",
+        "name": "debug 16",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 520,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "946fb6df4506769c",
+        "type": "mysql",
+        "z": "ab58ca7fdb927bc8",
+        "mydb": "cfccd76ef31dd118",
+        "name": "",
+        "x": 600,
+        "y": 220,
+        "wires": [
+            [
+                "ea536f3be00417eb"
+            ]
+        ]
+    },
+    {
+        "id": "63b9173bd2392919",
+        "type": "template",
+        "z": "ab58ca7fdb927bc8",
+        "name": "",
+        "field": "topic",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "insert into ku_indoor (temperature, humidity, lat, lon) VALUES ({{payload.temperature}},{{payload.humidity}}, {{payload.lat}}, {{payload.lon}});",
+        "output": "str",
+        "x": 360,
+        "y": 220,
+        "wires": [
+            [
+                "1914ce23e83f2719",
+                "946fb6df4506769c"
+            ]
+        ]
+    },
+    {
+        "id": "ea536f3be00417eb",
+        "type": "debug",
+        "z": "ab58ca7fdb927bc8",
+        "name": "debug 17",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 780,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "0c73182ecde1dca1",
+        "type": "mqtt-broker",
+        "name": "CPE Broker",
+        "broker": "iot.cpe.ku.ac.th",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "cfccd76ef31dd118",
+        "type": "MySQLdatabase",
+        "name": "",
+        "host": "iot.cpe.ku.ac.th",
+        "port": "3306",
+        "db": "b6610545863",
+        "tz": "+07.00",
+        "charset": "UTF8"
+    }
+]

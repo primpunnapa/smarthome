@@ -1,0 +1,176 @@
+[
+    {
+        "id": "542c8e06ee31930d",
+        "type": "tab",
+        "label": "Flow 4 openweather",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3817bbf0b8cd8c29",
+        "type": "http request",
+        "z": "542c8e06ee31930d",
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://api.openweathermap.org/data/2.5/weather?lat=13.847050&lon=100.571942&appid=4ada1a2720e1d78da4165a32880fa5e0",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 350,
+        "y": 160,
+        "wires": [
+            [
+                "2714fd4eff2888c9"
+            ]
+        ]
+    },
+    {
+        "id": "c015a78854131c19",
+        "type": "debug",
+        "z": "542c8e06ee31930d",
+        "name": "debug 12",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "cca7c4fc760c01fb",
+        "type": "inject",
+        "z": "542c8e06ee31930d",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "600",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 170,
+        "y": 160,
+        "wires": [
+            [
+                "3817bbf0b8cd8c29"
+            ]
+        ]
+    },
+    {
+        "id": "2714fd4eff2888c9",
+        "type": "json",
+        "z": "542c8e06ee31930d",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 530,
+        "y": 300,
+        "wires": [
+            [
+                "c015a78854131c19",
+                "e62fc596dba914e8"
+            ]
+        ]
+    },
+    {
+        "id": "901e60275325c143",
+        "type": "template",
+        "z": "542c8e06ee31930d",
+        "name": "",
+        "field": "topic",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "insert into ku_outdoor (lat, lon,temperature, humidity, clouds, description, main, rain, temp_min, temp_max) VALUES \n({{payload.lat}}, {{payload.lon}},{{payload.temperature}},{{payload.humidity}},{{payload.clouds}},'{{payload.description}}','{{payload.main}}',{{payload.rain}},{{payload.temp_min}},{{payload.temp_max}});",
+        "output": "str",
+        "x": 720,
+        "y": 400,
+        "wires": [
+            [
+                "241e8289b5bbfacf",
+                "e1d23cde52fbcd6f"
+            ]
+        ]
+    },
+    {
+        "id": "241e8289b5bbfacf",
+        "type": "debug",
+        "z": "542c8e06ee31930d",
+        "name": "debug 15",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "e62fc596dba914e8",
+        "type": "function",
+        "z": "542c8e06ee31930d",
+        "name": "function 1",
+        "func": "// Extract required fields from the JSON response\nconst data = msg.payload;\n\nconst lat = data.coord.lat;\nconst lon = data.coord.lon;\nconst temp = data.main.temp - 273.15;\nconst temp_min = data.main.temp_min - 273.15;\nconst temp_max = data.main.temp_max - 273.15;\nconst humidity = data.main.humidity;\nconst weather_main = data.weather[0].main;\nconst weather_description = data.weather[0].description;\nconst clouds = data.clouds.all;\nconst rain = data.rain ? data.rain[\"1h\"] || 0 : 0; // Check if rain data exists, default to 0 if not\n\n// Create a new payload with the extracted data\nmsg.payload = {\n  lat: lat,\n  lon: lon,\n  temperature: temp,\n  temp_min: temp_min,\n  temp_max: temp_max,\n  main : weather_main,\n  description: weather_description,\n  humidity: humidity,\n  // weather: `${weather_main} (${weather_description})`,\n  clouds: clouds,\n  rain: rain\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 460,
+        "wires": [
+            [
+                "901e60275325c143"
+            ]
+        ]
+    },
+    {
+        "id": "e1d23cde52fbcd6f",
+        "type": "mysql",
+        "z": "542c8e06ee31930d",
+        "mydb": "cfccd76ef31dd118",
+        "name": "",
+        "x": 900,
+        "y": 500,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "cfccd76ef31dd118",
+        "type": "MySQLdatabase",
+        "name": "",
+        "host": "iot.cpe.ku.ac.th",
+        "port": "3306",
+        "db": "b6610545863",
+        "tz": "+07.00",
+        "charset": "UTF8"
+    }
+]
