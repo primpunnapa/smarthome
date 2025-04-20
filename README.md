@@ -101,7 +101,7 @@ uvicorn api:app --port 8000 --reload
 ## Current Weather Data Integration  
 https://openweathermap.org/current
 ### Prerequisites
-1. OpenWeatherMap account (Sign up here)
+1. OpenWeatherMap account
 2. API key (obtained after registration)
 
 ### Getting Your API Key
