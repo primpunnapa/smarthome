@@ -90,6 +90,36 @@ A web application that visualizes indoor/outdoor weather data with scatter plots
    * Create a MySQL database  
    * Update the connection settings in config.py  
 
-### Frontend Setup
+### Frontend setup  
+The frontend uses Chart.js via CDN for data visualization.
+### How to run :
 ```bash
-uvicorn api:app --port 8000 --reload
+uvicorn api:app --port 8000 --reload  
+```
+
+# OpenWeather API Access Guide
+## Current Weather Data Integration  
+https://openweathermap.org/current
+### Prerequisites
+1. OpenWeatherMap account (Sign up here)
+2. API key (obtained after registration)
+
+### Getting Your API Key
+1. Log in to your OpenWeatherMap account
+2. Navigate to the "API Keys" tab
+3. Copy your default key or generate a new one
+
+### Making API Requests
+Base Endpoint:  
+https://api.openweathermap.org/data/2.5/weather
+
+Required Parameters:  
+
+| Parameter | Description   | Example Value      |
+|-----------|---------------|--------------------|
+| `lat`     | Latitude      | `13.847050`        |
+| `lon`     | Longitude     | `100.571942`       |
+| `appid`   | Your API key  | `your_api_key_here`|
+
+KU : lat = 13.847050, lon = 100.571942  
+Ladprao : lat = 13.7993271, lon = 100.6258821
