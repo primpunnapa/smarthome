@@ -5,8 +5,8 @@ The system integrates this data with outdoor weather data from a public API to p
 and recommendations for maintaining a comfortable home environment.
 
 # Members
-Supidcha NILSARIKA  ID : 6610545545  
-Punnapa PRAMOTEKUL  ID : 6610545863  
+Supidcha NILSARIKA  Software and Knowledge Engineering of Kasetsart University ID : 6610545545  
+Punnapa PRAMOTEKUL  Software and Knowledge Engineering of Kasetsart University ID : 6610545863  
 
 # Weather Dashboard
 
@@ -20,7 +20,7 @@ A web application that visualizes indoor/outdoor weather data with scatter plots
   - Get latest indoor/outdoor conditions
   - Temperature, humidity, and weather descriptions
   - Timestamped recordings
-  - Place : KU (Computer building, KU Gym and OCS), Home at Ladprao
+  - Place : KU (Computer building, Keff and OCS), Ladprao (Home)
 
 - **Comparative Analysis**:
   - Indoor vs outdoor comparisons
@@ -71,6 +71,8 @@ A web application that visualizes indoor/outdoor weather data with scatter plots
 
 # Installation
 
+Python version >= 3.11
+
 ### Backend Setup
 
 1. Clone the repository:
@@ -91,11 +93,18 @@ A web application that visualizes indoor/outdoor weather data with scatter plots
    * Update the connection settings in config.py  
 
 ### Frontend setup  
-The frontend uses Chart.js via CDN for data visualization.
+The frontend uses Chart.js via CDN for data visualization.  
+
 ### How to run :
 ```bash
 uvicorn api:app --port 8000 --reload  
 ```
+
+### our weather API
+    http://localhost:8000/docs
+
+### our weather dashboard
+    http://localhost:8000
 
 # OpenWeather API Access Guide
 ## Current Weather Data Integration  
