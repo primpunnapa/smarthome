@@ -15,7 +15,7 @@
         "method": "GET",
         "ret": "txt",
         "paytoqs": "ignore",
-        "url": "your API Call",
+        "url": "<<YOUR_API_KEY>>",
         "tls": "",
         "persist": false,
         "proxy": "",

@@ -20,7 +20,7 @@ A web application that visualizes indoor/outdoor weather data with scatter plots
   - Get latest indoor/outdoor conditions
   - Temperature, humidity, and weather descriptions
   - Timestamped recordings
-  - Place : KU (Computer building, Keff and OCS), Ladprao (Home)
+  - Place : **KU** (Computer building, Keff and OCS), **Ladprao** (Home)
 
 - **Comparative Analysis**:
   - Indoor vs outdoor comparisons
@@ -48,6 +48,9 @@ A web application that visualizes indoor/outdoor weather data with scatter plots
 |----------|--------|-------------|
 | `/{place}/available-dates` | GET | Get available date|
 | `/{place}/{source}/analytics/hourly` | GET | Get hourly aggregated statistics |
+
+* for {place}, select KU or Ladprao
+* for {source}, select outdoor or indoor
 
 ### Key Technical Features
 
@@ -106,6 +109,8 @@ uvicorn api:app --port 8000 --reload
 ### our weather dashboard
     http://localhost:8000
 
+# NODE-RED FLOW
+
 # OpenWeather API Access Guide
 ## Current Weather Data Integration  
 https://openweathermap.org/current
@@ -132,3 +137,7 @@ Required Parameters:
 
 KU : lat = 13.847050, lon = 100.571942  
 Ladprao : lat = 13.7993271, lon = 100.6258821
+
+### [openweather.json](node-red%2Fopenweather.json)
+#### How to use
+* replace YOUR_API_KEY with your Openweather API key
