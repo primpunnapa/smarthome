@@ -169,7 +169,7 @@
         "name": "",
         "host": "iot.cpe.ku.ac.th",
         "port": "3306",
-        "db": "b6610545863",
+        "db": "<<YOUR_STD_ID>>",
         "tz": "+07.00",
         "charset": "UTF8"
     }

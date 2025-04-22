@@ -141,3 +141,9 @@ Ladprao : lat = 13.7993271, lon = 100.6258821
 ### [openweather.json](node-red%2Fopenweather.json)
 #### How to use
 * replace YOUR_API_KEY with your Openweather API key
+* replace YOUR_STD_ID with your student ID
+
+### [sensor.json](node-red%2Fsensor.json)
+#### How to use
+* replace YOUR_STD_ID with your student ID
+

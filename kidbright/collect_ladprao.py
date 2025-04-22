@@ -44,6 +44,6 @@ while True:
         'longitude':100.6258821,
         'temperature':temperature,
         'humiduty':humidity}
-    mqtt.publish('b6610545545/kidbright',json.dumps(data))
+    mqtt.publish('bxxxxxxxx/kidbright',json.dumps(data)) # replace with your student ID
     print("Data published:", data)
     time.sleep(600)

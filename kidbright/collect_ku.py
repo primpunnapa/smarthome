@@ -58,5 +58,5 @@ while True:
         print("Failed to read sensor data. Retrying...")
     
     # Wait for  600 seconds before the next reading
-    mqtt.publish("b6610545863/kidbright", json.dumps(data))
+    mqtt.publish("bxxxxxxxx/kidbright", json.dumps(data))  # replace with your student ID
     time.sleep(600) 
