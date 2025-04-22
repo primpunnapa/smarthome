@@ -146,4 +146,4 @@ Ladprao : lat = 13.7993271, lon = 100.6258821
 ### [sensor.json](node-red%2Fsensor.json)
 #### How to use
 * replace YOUR_STD_ID with your student ID
-
+* 
